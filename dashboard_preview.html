@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pharma Sales Dashboard Preview</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 24px; background: #f4f7fb; color: #1d2636; }
+    h1 { margin-bottom: 8px; }
+    .header { margin-bottom: 24px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .card { background: white; border-radius: 16px; box-shadow: 0 12px 28px rgba(14, 30, 37, 0.08); padding: 24px; }
+    .card-title { font-size: 0.95rem; color: #7b89a0; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; }
+    .card-value { font-size: 2rem; font-weight: 700; line-height: 1.1; }
+    .section { margin-top: 32px; }
+    .section h2 { margin-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; }
+    th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #e6ebf2; }
+    th { background: #f2f6fb; color: #4a5b6a; font-weight: 700; }
+    tr:last-child td { border-bottom: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Pharma Sales Dashboard Preview</h1>
+    <p>Executive summary of pharmaceutical sales performance generated from the Excel workbook.</p>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-title">Total Revenue</div>
+      <div class="card-value">$26.08M</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Total Units Sold</div>
+      <div class="card-value">1,056,409</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Average Achievement %</div>
+      <div class="card-value">95.83%</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top Performing Region</div>
+      <div class="card-value">South America</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top Selling Drug</div>
+      <div class="card-value">Drug B</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Achievement Rate</div>
+      <div class="card-value">37.56%</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Top Regional Revenue</h2>
+    <table>
+      <thead>
+        <tr><th>Region</th><th>Total Revenue</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>South America</td><td>$6,246,955</td></tr>
+        <tr><td>North America</td><td>$5,367,445</td></tr>
+        <tr><td>Europe</td><td>$5,027,740</td></tr>
+        <tr><td>Asia</td><td>$4,809,529</td></tr>
+        <tr><td>Africa</td><td>$4,627,135</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Monthly Revenue Trend</h2>
+    <table>
+      <thead>
+        <tr><th>Month</th><th>Total Revenue</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Jan</td><td>$2,230,464</td></tr>
+        <tr><td>Feb</td><td>$1,858,322</td></tr>
+        <tr><td>Mar</td><td>$2,069,146</td></tr>
+        <tr><td>Apr</td><td>$2,176,512</td></tr>
+        <tr><td>May</td><td>$2,348,333</td></tr>
+        <tr><td>Jun</td><td>$1,860,874</td></tr>
+        <tr><td>Jul</td><td>$2,192,827</td></tr>
+        <tr><td>Aug</td><td>$2,534,352</td></tr>
+        <tr><td>Sep</td><td>$1,821,314</td></tr>
+        <tr><td>Oct</td><td>$2,288,096</td></tr>
+        <tr><td>Nov</td><td>$2,449,237</td></tr>
+        <tr><td>Dec</td><td>$2,249,327</td></tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

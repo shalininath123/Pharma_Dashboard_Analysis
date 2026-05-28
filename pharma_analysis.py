@@ -5,11 +5,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from openpyxl import load_workbook
 
 EXCEL_FILE = Path("Pharmaceutical_Drug_Sales.xlsx")
 RAW_SHEET = "Raw_Data "
 HELPER_SHEET = "Helper_Table"
+DASHBOARD_IMAGE = Path("dashboard_visual.png")
+DASHBOARD_HTML = Path("dashboard_plot.html")
 
 CSV_OUTPUTS = {
     "cleaned_data": Path("cleaned_data.csv"),
@@ -262,6 +267,124 @@ def write_summary_tables(cleaned_header: List[str], cleaned_rows: List[Tuple]) -
     )
 
 
+def df_from_cleaned(cleaned_header: List[str], cleaned_rows: List[Tuple]) -> pd.DataFrame:
+    df = pd.DataFrame(cleaned_rows, columns=cleaned_header)
+    df["Revenue"] = pd.to_numeric(df["Revenue"], errors="coerce").fillna(0)
+    df["Units Sold"] = pd.to_numeric(df["Units Sold"], errors="coerce").fillna(0).astype(int)
+    df["Achievement Percentage"] = pd.to_numeric(df["Achievement Percentage"], errors="coerce").fillna(0)
+    month_order = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    if "Month" in df.columns:
+        df["Month"] = pd.Categorical(df["Month"], categories=month_order, ordered=True)
+    return df
+
+
+def create_dashboard_assets(cleaned_header: List[str], cleaned_rows: List[Tuple]) -> None:
+    df = df_from_cleaned(cleaned_header, cleaned_rows)
+    region_summary = df.groupby("Region", as_index=False)["Revenue"].sum().sort_values("Revenue", ascending=False)
+    monthly_summary = df.groupby("Month", as_index=False)["Revenue"].sum().sort_values("Month")
+    top_drugs = df.groupby("Drug Name", as_index=False)["Revenue"].sum().sort_values("Revenue", ascending=False).head(10)
+    status_counts = df["Performance Status"].value_counts().reindex(["Achieved", "Below Target"]).fillna(0)
+
+    sns.set_style("whitegrid")
+    plt.rcParams["figure.facecolor"] = "#f8fafc"
+    fig, axes = plt.subplots(2, 2, figsize=(20, 14), constrained_layout=True)
+    fig.suptitle("Pharma Sales Analytics Dashboard", fontsize=26, weight="bold", y=0.98)
+
+    sns.barplot(
+        data=region_summary,
+        x="Revenue",
+        y="Region",
+        palette="Blues_d",
+        ax=axes[0, 0],
+    )
+    axes[0, 0].set_title("Revenue by Region")
+    axes[0, 0].set_xlabel("Total Revenue")
+    axes[0, 0].set_ylabel("")
+    for container in axes[0, 0].containers:
+        labels = [f"${int(rect.get_width()):,}" for rect in container]
+        axes[0, 0].bar_label(container, labels=labels, padding=4)
+
+    sns.lineplot(
+        data=monthly_summary,
+        x="Month",
+        y="Revenue",
+        marker="o",
+        linewidth=3,
+        ax=axes[0, 1],
+    )
+    axes[0, 1].set_title("Monthly Revenue Trend")
+    axes[0, 1].set_ylabel("Revenue")
+    axes[0, 1].set_xlabel("")
+    axes[0, 1].yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x / 1_000_000:.1f}M"))
+
+    sns.barplot(
+        data=top_drugs,
+        x="Revenue",
+        y="Drug Name",
+        palette="Purples_d",
+        ax=axes[1, 0],
+    )
+    axes[1, 0].set_title("Top 10 Selling Drugs")
+    axes[1, 0].set_xlabel("Revenue")
+    axes[1, 0].set_ylabel("")
+    for container in axes[1, 0].containers:
+        labels = [f"${int(rect.get_width()):,}" for rect in container]
+        axes[1, 0].bar_label(container, labels=labels, padding=4)
+
+    sns.barplot(
+        x=status_counts.index,
+        y=status_counts.values,
+        palette=["#34a853", "#ea4335"],
+        ax=axes[1, 1],
+    )
+    axes[1, 1].set_title("Performance Status Distribution")
+    axes[1, 1].set_xlabel("")
+    axes[1, 1].set_ylabel("Count")
+    for container in axes[1, 1].containers:
+        labels = [f"{int(rect.get_height())}" for rect in container]
+        axes[1, 1].bar_label(container, labels=labels, padding=4)
+
+    fig.savefig(DASHBOARD_IMAGE, dpi=150, facecolor=fig.get_facecolor())
+    plt.close(fig)
+    print(f"Dashboard visualization saved to {DASHBOARD_IMAGE}")
+
+    title_metrics = {
+        "Total Revenue": f"${df['Revenue'].sum():,.2f}",
+        "Total Units Sold": f"{int(df['Units Sold'].sum()):,}",
+        "Average Achievement": f"{df['Achievement Percentage'].mean():.2%}",
+        "Top Performing Region": region_summary.iloc[0]['Region'] if not region_summary.empty else "N/A",
+        "Top Selling Drug": top_drugs.iloc[0]['Drug Name'] if not top_drugs.empty else "N/A",
+    }
+    write_dashboard_html(title_metrics)
+
+
+def write_dashboard_html(title_metrics: Dict[str, str]) -> None:
+    html = """<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"UTF-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
+  <title>Pharma Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 24px; background: #f4f7fb; color: #1d2636; }
+    .page-title { margin-bottom: 16px; }
+    .metrics { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+    .metric-card { padding: 18px 22px; background: white; border-radius: 16px; box-shadow: 0 12px 24px rgba(0,0,0,0.08); flex: 1 1 220px; min-width: 220px; }
+    .metric-card h3 { margin: 0 0 8px; font-size: 0.95rem; color: #556b86; }
+    .metric-card p { margin: 0; font-size: 1.6rem; font-weight: 700; }
+    .dashboard-image { width: 100%; border-radius: 20px; box-shadow: 0 16px 32px rgba(0,0,0,0.12); }
+  </style>
+</head>
+<body>
+  <h1 class=\"page-title\">Pharma Sales Dashboard</h1>
+  <div class=\"metrics\">\n"""
+    for name, value in title_metrics.items():
+        html += f"  <div class=\"metric-card\"><h3>{name}</h3><p>{value}</p></div>\n"
+    html += f"</div>\n  <img class=\"dashboard-image\" src=\"{DASHBOARD_IMAGE.name}\" alt=\"Dashboard visualization\" />\n</body>\n</html>"
+    DASHBOARD_HTML.write_text(html, encoding="utf-8")
+    print(f"Dashboard HTML saved to {DASHBOARD_HTML}")
+
+
 def main() -> None:
     if not EXCEL_FILE.exists():
         raise FileNotFoundError(f"Could not find {EXCEL_FILE}")
@@ -273,6 +396,7 @@ def main() -> None:
     write_csv(CSV_OUTPUTS["cleaned_data"], cleaned_header, cleaned_rows)
     print(f"Cleaned dataset saved to {CSV_OUTPUTS['cleaned_data']}")
     summarize(cleaned_header, cleaned_rows)
+    create_dashboard_assets(cleaned_header, cleaned_rows)
 
 
 if __name__ == "__main__":
